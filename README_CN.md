@@ -365,7 +365,7 @@ address-generator, random-address, fake-address, tax-free-state, real-address, r
 
 ---
 
-## 💰 支持与数据服务
+## 💰 支持与技术服务
 
 
 
@@ -390,7 +390,7 @@ TYz2SP7GtL84t14CeL7tnhHLgeako3haHW
 > **注意**：加密货币打赏不可退款，请确认地址无误后再发送。
 
 
-### 📊 数据服务支持
+### 📊 技术服务支持
 
 需要建站数据支持？欢迎随时联系我们，提供付费服务与技术协助。
 
