@@ -382,6 +382,8 @@ You can also support us via cryptocurrency:
 TYz2SP7GtL84t14CeL7tnhHLgeako3haHW
 ```
 
+![大赏TRC]（TRC.png）
+
 > **Note**: Cryptocurrency donations are non-refundable. Please double-check the address before sending.
 
 ### 📊 Enterprise Data Services & Licensing
