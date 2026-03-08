@@ -378,10 +378,14 @@ address-generator, random-address, fake-address, tax-free-state, real-address, r
 0x6Df562A8B669bf90EAe5ccB0E0440eb9DF237E4e
 ```
 
+![dashangerc](ERC.png)
+
 **USDT (TRC-20):**
 ```
 TYz2SP7GtL84t14CeL7tnhHLgeako3haHW
 ```
+
+![dashangTRC](TRC.png)
 
 > **注意**：加密货币打赏不可退款，请确认地址无误后再发送。
 
