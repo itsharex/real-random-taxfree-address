@@ -375,7 +375,7 @@ You can also support us via cryptocurrency:
 **Ethereum / USDT (ERC-20):**
 ```
 0x6Df562A8B669bf90EAe5ccB0E0440eb9DF237E4e
-``
+```
 
 ![dashangerc](ERC.png)
 
