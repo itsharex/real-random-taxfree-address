@@ -1,538 +1,187 @@
-# Real Random US Tax-Free State Address Generator
+# MockAddress Core（开源前端核心）
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Frontend](https://img.shields.io/badge/Frontend-Pure%20JavaScript-blue)]()
-[![Countries](https://img.shields.io/badge/Countries-10%2B-orange)]()
-[![Languages](https://img.shields.io/badge/Languages-5-brightgreen)]()
-[![Tax-Free States](https://img.shields.io/badge/Tax--Free%20States-5-red)]()
-[![No Backend](https://img.shields.io/badge/Backend-None-lightgrey)]()
-[![Privacy](https://img.shields.io/badge/Privacy-First-brightgreen)]()
+[![Frontend](https://img.shields.io/badge/Frontend-纯%20JavaScript-blue)]()
+[![No Backend](https://img.shields.io/badge/后端-无-lightgrey)]()
+[![Privacy](https://img.shields.io/badge/隐私-优先-brightgreen)]()
 
-> This repository contains the open-source **frontend core engine** of MockAddress, for generating authentic-format test addresses and MAC address data across multiple countries/regions.  
-> Full production site: <https://mockaddress.com/>  
-> 
-> 🇨🇳 **中文用户请查看：[README_CN.md](./README_CN.md)（中文文档）**
-
-![mockaddress Example image from the homepage of the US Tax-Free State Address Generator.](en.png)
-
-## Project Overview
-
-MockAddress Core is a **pure frontend, zero backend dependency** test data engine designed for developers and QA engineers, providing:
-
-- **Authentic-format address data** conforming to official postal standards (verifiable on Google Maps / Apple Maps)
-- Optional **identity fields + credit card fields** (for form/payment flow testing only)
-- **MAC address generation + vendor lookup + IPv6 Link-Local derivation** and other network test data
-
-All core logic runs entirely in the browser and can be deployed to any static hosting environment (GitHub Pages, Cloudflare Pages, Vercel, etc.).
-
-> **Note**: This repository only open-sources the **engine and base styles**.  
-> Large-scale address datasets and production site page templates remain MockAddress private assets for online services.
+> 本仓库为 MockAddress 的**开源前端核心**：多国家/地区的地址与相关测试数据生成逻辑、MAC 工具、基础样式等。  
+> 完整线上产品：<https://mockaddress.com/>  
+> **English:** [README_EN.md](./README_EN.md)
 
 ---
 
-## Key Features
+## 本仓库包含什么
 
-- **Multi-Country/Region Address Generation (Engine Support)**
-  - Supports generating address structures conforming to local postal standards for multiple countries/regions
-  - Address fields include complete information: street, city, state/province, postal code, country, etc.
-  - Can be extended with localized fields based on country (e.g., Japanese address hierarchy, Hong Kong bilingual addresses)
+| 部分 | 说明 |
+|------|------|
+| **`src/`** | 可集成到你项目中的引擎（`address-generator.js`、`mac-generator.js`、`utils.js`、`config.js` 等）与 **`src/css/main.css`**。 |
+| **`data/tf-preview.pack.json`** | 随仓附带的**演示用**美国免税州地址抽样（**仅 AK、DE、MT、OR**，中性文件名；**不是**线站全量库）。 |
+| **根目录 `index.html` + `test-harness.mjs`** | 在本地 HTTP 下测试 `src`、查看与主站类似的**卡片式结果 UI**。 |
+| **`启动测试.bat`** | Windows 下在仓库根目录启动静态服务并打开浏览器（与常见本地静态站习惯一致）。 |
 
-- **Authentic Format & Verifiable**
-  - Address data is based on official postal/statistical data + OpenStreetMap and other public data sources, cleaned and organized
-  - Generated results are designed to be **verifiable on Google Maps / Apple Maps and other mapping services**
-  - Suitable for registration forms, payment pages, tax calculation logic, and other scenarios requiring strict address format validation
-
-- **Optional Identity & Credit Card Fields (Testing Only)**
-  - Optionally generate name, gender, date of birth, occupation, localized ID number formats, etc.
-  - Optionally generate credit card numbers (Luhn-validated), expiration date, CVC, and other fields
-  - All identity/card data is **randomly generated and does not correspond to any real individuals or real cards**
-
-- **Batch Export & Automation-Friendly**
-  - Built-in CSV / JSON export capabilities
-  - Suitable for automated testing, regression testing, CI/CD pipelines for bulk test data injection
-
-- **MAC Tools**
-  - Generate MAC addresses in multiple formats (colon, hyphen, dot, no separator, etc.)
-  - Vendor identification based on OUI dataset
-  - Support for deriving IPv6 Link-Local addresses from MAC addresses
-  - All logic runs locally in the browser, suitable for network testing, device simulation, and script development
-
-- **Pure Frontend, Privacy-First**
-  - No backend service dependency, all logic completed in frontend JS
-  - Optionally save generated results to browser `localStorage`, servers do not store any generated data
+**不包含：** 正式站页面模板、内部运维脚本、以及线上环境使用的**全量数据资产**（其具体文件名与目录结构不在本仓库文档中列出）。随仓仅公开上述 **`.pack.json`** 演示数据。
 
 ---
 
-## Repository Structure
+## 数据路径：引擎如何找 JSON
+
+引擎**不硬编码**任何特定业务环境下的文件名。所有数据路径来自 **`src/js/config.js`** 中的 **`dataFiles`** 映射（可通过 **`configure({ dataFiles: { … } })`** 整体覆盖）。默认值为**中性、与线站无关**的相对路径，仅表示「开源仓库里若放文件，建议叫什么名字」；**你可以改成任意路径**（含仅自己服务器可见的名称），不必与默认一致。
+
+| `dataFiles` 键 | 默认相对路径（可被 `configure` 改掉） |
+|-----------------|--------------------------------------|
+| `usRegions` | `data/addr-regions-us.json` |
+| `names` | `data/names-pool.json` |
+| `hkRegions` | `data/addr-regions-hk.json` |
+| `ukRegions` | `data/addr-regions-uk.json` |
+| `caRegions` | `data/addr-regions-ca.json` |
+| `jpRegions` | `data/addr-regions-jp.json` |
+| `jpNames` | `data/names-pool-jp.json` |
+| `inRegions` | `data/addr-regions-in.json` |
+| `twRegions` | `data/addr-regions-tw.json` |
+| `sgRegions` | `data/addr-regions-sg.json` |
+| `deRegions` | `data/addr-regions-de.json` |
+| `taxfreePreviewPack` | `data/tf-preview.pack.json`（随仓演示抽样） |
+| `macOui` | `data/oui-registry.json` |
+
+私有部署示例（路径仅作演示，可指向内部任意文件）：
+
+```javascript
+import { configure } from './src/js/config.js';
+
+configure({
+  dataBasePath: 'assets/',
+  autoDetectPaths: false,
+  dataFiles: {
+    usRegions: 'assets/a.json',
+    names: 'assets/b.json',
+    taxfreePreviewPack: 'assets/demo.pack.json',
+  },
+});
+```
+
+**JSON 内部结构**仍须与引擎读取的字段一致（与 MockAddress 公开引擎的格式约定相同）；仅**磁盘路径与文件名**由你掌控，本仓库文档**不**描述任何线上环境的真实目录。
+
+---
+
+## 仓库结构（节选）
 
 ```
-mockaddress-core/
+KY/
 ├── src/
 │   ├── js/
-│   │   ├── address-generator.js     # Address/identity/credit card generation engine
-│   │   ├── mac-generator.js         # MAC generation and vendor lookup
-│   │   ├── storage.js               # Storage, rate limiting, export utilities
-│   │   ├── language-switcher.js     # Multi-language routing and internal link rewriting
-│   │   ├── utils.js                 # General utility functions
-│   │   └── config.js                # Configuration module
+│   │   ├── address-generator.js
+│   │   ├── taxfree-preview-pack.js   # 读取 tf-preview.pack.json，随机抽样行
+│   │   ├── mac-generator.js
+│   │   ├── storage.js
+│   │   ├── language-switcher.js
+│   │   ├── utils.js
+│   │   └── config.js
 │   └── css/
-│       └── main.css                 # Universal dark theme and base UI component styles
-├── README.md                         # Project documentation (this file)
-├── README_EN.md                      # English documentation
-├── LICENSE                           # Open source license (MIT)
-├── CONTRIBUTING.md                   # Contribution guidelines
-├── ROADMAP.md                        # Roadmap
-└── .gitignore                        # Git ignore rules
+│       └── main.css
+├── data/
+│   └── tf-preview.pack.json          # 演示用抽样（四州）
+├── index.html                        # 本地测试入口
+├── test-harness.mjs
+├── 启动测试.bat
+├── LICENSE
+├── CONTRIBUTING.md
+├── ROADMAP.md
+├── README_CN.md
+└── README_EN.md
 ```
-
-> **Reminder**: **This repository does not include production site HTML files or large-scale data files `data/*.json`**.  
-> These are used for online deployment and are not part of this open-source release.
 
 ---
 
-## Usage
+## 本地运行（测试 `src`）
 
-### Quick Start
+1. 将整个 **`KY`** 文件夹放在本地。
+2. **Windows：** 双击 **`启动测试.bat`**（会在仓库根目录启动服务，并尝试打开浏览器）。  
+3. 浏览器访问 **`http://localhost:8000/`**（以本仓库 `index.html` 为入口）。
+4. **勿**用 `file://` 打开依赖 `fetch('data/...')` 与 ES Module 的测试页，否则会失败。
 
-**Option 1: Direct Use (if your data directory is `data/`)**
+依赖：系统已安装 **Python 3**（或 bat 中备选的 PHP / Node `npx`）。仅静态文件服务，无需数据库或 Node 构建步骤。
 
-```html
-<script type="module">
-  import { generateUSAddress } from './src/js/address-generator.js'
-  
-  // Direct use, will automatically detect data/ directory
-  const address = await generateUSAddress('CA')
-  console.log(address)
-</script>
-```
+---
 
-**Option 2: Custom Data Path (Recommended)**
+## 使用方式（集成 `src`）
+
+### 配置数据目录与单文件路径
 
 ```html
 <script type="module">
-  // 1. Import configuration module
-  import { configure } from './src/js/config.js'
-  import { generateUSAddress } from './src/js/address-generator.js'
-  
-  // 2. Configure your data path
+  import { configure } from './src/js/config.js';
+  import { generateUSAddress } from './src/js/address-generator.js';
+
   configure({
-    dataBasePath: 'my-data/',  // Your data directory
-    autoDetectPaths: false     // Disable auto-detection
-  })
-  
-  // 3. Use normally
-  const address = await generateUSAddress('CA')
-  console.log(address)
+    dataBasePath: 'my-data/',
+    autoDetectPaths: false,
+    // 可选：逐键覆盖 dataFiles，对接自有文件名
+    // dataFiles: { usRegions: 'my-data/xxx.json', names: 'my-data/yyy.json' }
+  });
+
+  const address = await generateUSAddress('CA');
+  console.log(address);
 </script>
 ```
 
-### Configuration Options
 
-- **`dataBasePath`**: Base path for your data files (e.g., `'my-data/'`, `'/static/data/'`)
-- **`autoDetectPaths`**: Whether to enable automatic path detection (default `true`, suitable for mockaddress.com's multi-language structure)
-
-> **Important**: If you don't call `configure()`, the code will use default behavior, **completely unaffected by mockaddress.com's normal operation**.
-
-### Available Functions
-
-- `generateUSAddress(state)` - US addresses
-- `generateHKAddress(region, isEnglish)` - Hong Kong addresses
-- `generateUKAddress(region)` - UK addresses
-- `generateCAAddress(province)` - Canada addresses
-- `generateJPAddress(prefecture)` - Japan addresses
-- `generateINAddress(state)` - India addresses
-- `generateTWAddress(county)` - Taiwan addresses
-- `generateSGAddress(state)` - Singapore addresses
-- `generateDEAddress(state)` - Germany addresses
-- `generateTaxFreeAddress(state)` - US tax-free state addresses
-- `generateIdentityInfo(address)` - Identity information
-- `generateCreditCardInfo()` - Credit card information (testing only)
-
-### Code Examples
-
-**Generate US Tax-Free State Address:**
+### 免税州 **真实抽样行**（与 `tf-preview.pack.json` 一致）
 
 ```javascript
-import { generateTaxFreeAddress } from './src/js/address-generator.js';
+import {
+  pickRandomTaxFreePreviewRow,
+  addressFromTaxFreePreviewRow
+} from './src/js/taxfree-preview-pack.js';
 
-// Generate address for Oregon (tax-free state)
-const address = await generateTaxFreeAddress('OR');
-console.log(address);
-// Output: { street: "123 Main St", city: "Portland", state: "OR", zip: "97201", ... }
+const row = await pickRandomTaxFreePreviewRow('DE');
+const addr = await addressFromTaxFreePreviewRow(row, 'Delaware');
+// addr 含 phone 时：与 generateUSAddress 相同，从 usRegions.states.DE.area_codes 随机取区号再 generatePhoneNumber；无该文件时退回内置小池
 ```
 
-**Generate Address with Identity Info:**
+### `generateTaxFreeAddress` 说明
 
-```javascript
-import { generateUSAddress, generateIdentityInfo } from './src/js/address-generator.js';
+`generateTaxFreeAddress()` 内部调用 **`generateUSAddress()`**，走引擎的**合成地址**逻辑：须在你本地的 `data/`（或通过 `configure` 配置的目录）中自备**一整套**数据文件；**本 README 不列举这些文件的名称，也不描述线上环境的存放方式**。这与 **`tf-preview.pack.json`** 的演示抽样**不是同一套数据**。需要与演示包同源的随机行时，请使用 **`taxfree-preview-pack.js`**。
 
-const address = await generateUSAddress('CA');
-const identity = generateIdentityInfo(address);
-console.log({ ...address, ...identity });
-// Output includes: name, gender, dateOfBirth, occupation, ssn, etc.
-```
+### 其它导出函数（需自备对应 `data/*.json`）
 
-**Generate MAC Address:**
-
-```javascript
-import { generateMACAddress, lookupVendor } from './src/js/mac-generator.js';
-
-const mac = generateMACAddress('colon'); // 'aa:bb:cc:dd:ee:ff'
-const vendor = await lookupVendor(mac);
-console.log(vendor); // Vendor information from OUI database
-```
-
-**Export to CSV/JSON:**
-
-```javascript
-import { exportToCSV, exportToJSON, getAllSavedAddresses } from './src/js/storage.js';
-
-// After saving some addresses
-const addresses = getAllSavedAddresses();
-const csv = exportToCSV(addresses);
-const json = exportToJSON(addresses);
-
-// Download or use the exported data
-console.log(csv);
-console.log(json);
-```
-
-### Offline Local-Only Usage (Run Everything on Your Own Machine)
-
-If, like me, you prefer to **keep all data and logic on your own computer only**, without relying on any external server, you can treat MockAddress Core as a pure static site and run it via a simple local HTTP server:
-
-- My development environment is a Windows PC with:
-  - A modern browser (Chrome / Edge, etc.)
-  - Python / PHP / Node.js (at least one of them; in my case I have all three installed)
-- Clone this repository to a local directory, e.g. `D:\mockaddress-core\`.  
-- In the project root, create a `start-local-server.bat` with the following content to start a local server and automatically open `http://localhost:8000`:
-
-```bat
-@echo off
-
-echo Starting local server...
-
-echo.
-
-REM Check if Python 3 is available
-
-python --version >nul 2>&1
-
-if %errorlevel% equ 0 (
-
-    python -c "import sys; sys.exit(0 if sys.version_info >= (3, 0) else 1)" >nul 2>&1
-
-    if %errorlevel% equ 0 (
-
-        echo Found Python 3
-
-        echo Starting server on http://localhost:8000
-
-        echo Press Ctrl+C to stop
-
-        echo.
-
-        timeout /t 2 /nobreak >nul
-
-        start http://localhost:8000
-
-        python -m http.server 8000
-
-        exit /b 0
-
-    )
-
-)
-
-REM Check if Python 2 is available
-
-python --version >nul 2>&1
-
-if %errorlevel% equ 0 (
-
-    python -c "import sys; sys.exit(0 if sys.version_info < (3, 0) else 1)" >nul 2>&1
-
-    if %errorlevel% equ 0 (
-
-        echo Found Python 2
-
-        echo Starting server on http://localhost:8000
-
-        echo Press Ctrl+C to stop
-
-        echo.
-
-        timeout /t 2 /nobreak >nul
-
-        start http://localhost:8000
-
-        python -m SimpleHTTPServer 8000
-
-        exit /b 0
-
-    )
-
-)
-
-REM Check if PHP is available
-
-php --version >nul 2>&1
-
-if %errorlevel% equ 0 (
-
-    echo Found PHP
-
-    echo Starting server on http://localhost:8000
-
-    echo Press Ctrl+C to stop
-
-    echo.
-
-    timeout /t 2 /nobreak >nul
-
-    start http://localhost:8000
-
-    php -S localhost:8000
-
-    exit /b 0
-
-)
-
-REM Check if Node.js is available
-
-where npx >nul 2>&1
-
-if %errorlevel% equ 0 (
-
-    echo Found Node.js
-
-    echo Starting server on http://localhost:8000
-
-    echo Press Ctrl+C to stop
-
-    echo.
-
-    timeout /t 2 /nobreak >nul
-
-    start http://localhost:8000
-
-    npx --yes http-server -p 8000
-
-    exit /b 0
-
-)
-
-echo Error: No server found
-
-echo Please install Python, PHP, or Node.js
-
-pause
-
-exit /b 1
-```
-
-How to use:
-
-- Double-click `start-local-server.bat`. The script will try Python 3 → Python 2 → PHP → Node.js in order, start the first available local server, and open `http://localhost:8000` in your browser.  
-- From that point on, **all address generation logic— including the US address generator and the Hong Kong English/Chinese address generator—runs entirely on your own machine, with no Internet connection required**.  
-- This setup is ideal for **intranet environments** or teams with strict privacy/compliance requirements.
-
-For detailed usage instructions, see [`使用说明.md`](./使用说明.md) (Usage Guide in Chinese).
-
-You can also refer to our production site <https://mockaddress.com/> to see real-world usage scenarios and UI design, then customize as needed in your own project.
+引擎还支持香港、英国、加拿大、日本、印度、台湾、新加坡、德国等生成函数，以及 `generateIdentityInfo`、`generateCreditCardInfo`、MAC 相关接口等，详见 `src/js/address-generator.js`、`mac-generator.js`。完整功能需自行准备与引擎 `loadData` 约定一致的数据文件（本仓库不随附全量库）。
 
 ---
 
-## Deployment Examples: Cloudflare & VPS (Static Hosting)
-
-> The following steps are for developers who want to deploy mockaddress-core themselves, describing only the simplest path for README purposes.
-
-### Deploy with Cloudflare Pages (Recommended for Frontend / Zero Ops Cost Scenarios)
-
-1. Create a repository on GitHub (e.g., `mockaddress-core`), push this project's code to it.
-2. Log in to Cloudflare, go to **Pages**, select "Create a project with Git provider", and bind this repository.
-3. Build settings:
-   - Framework preset: **None / Static Site**
-   - Build command: Leave empty (or `npm run build` if you add a build process later)
-   - Output directory: Set to project root (or your build output directory)
-4. After deployment, ensure:
-   - All JS/CSS load correctly via `<script type="module">` / `<link>` relative paths;
-   - If you have multi-language subdirectory structures (e.g., `/en/`, `/ru/`), maintain the same directory hierarchy in the repository.
-
-> **Note**: If you only want to open-source the core and don't want to expose the full site, you can deploy only a minimal demo page (or just screenshots, directing users to the production site in the README).
-
-### Deploy with VPS + Nginx (Suitable for Existing Servers)
-
-1. Build or organize the static file structure locally (`src/js`, `src/css`, and your HTML entry).
-2. Upload these static files to your VPS (e.g., `/var/www/mockaddress-core` directory).
-3. Configure Nginx site (example):
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    root /var/www/mockaddress-core;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ =404;
-    }
-}
-```
-
-4. Reload Nginx: `nginx -s reload` or use the corresponding service management command.
-5. Open your browser and visit `http://your-domain.com` to confirm address generation/MAC tools and other features work correctly.
-
-> **VPS deployment essence**: Host this set of frontend files as a **pure static site**, no Node.js / PHP / database or other backend environment required.
+开源范围、不适用场景、部署思路、路线图等可与 [CONTRIBUTING.md](./CONTRIBUTING.md)、[ROADMAP.md](./ROADMAP.md) 及下方章节对照。
 
 ---
 
-## Data Sources & Authenticity (Brief Overview)
+## 部署（静态托管）
 
-For complete data sources and more detailed authority information, refer to our publicly available llms documentation online. Here is a brief summary:
+将本仓库作为**纯静态站点**托管即可（GitHub Pages、Cloudflare Pages、自有 Nginx 等）。确保：
 
-- Primarily based on official postal/statistical data and geographic data published by various countries
-- Supplemented with open-source geographic data projects such as OpenStreetMap / GeoNames / OpenAddresses
-- Cleaned and randomly combined through custom rules to ensure:
-  - Address structure conforms to local postal standards
-  - Address content is designed to be verifiable on mainstream mapping services
-  - Not directly associated with any real personal identity
+- 使用 **HTTP(S)** 访问含 `import` / `fetch` 的页面；  
+- `data/tf-preview.pack.json` 与引用它的页面路径关系正确（通常仓库根为站点根）。
 
 ---
 
-## Open Source Scope & Non-Open Source Parts
+## 适用与不适用场景
 
-**This repository open-sources the following:**
+**适用：** 开发/测试、表单与流程验证、教学演示、隐私友好的示例数据生成等。
 
-- Frontend engine logic for address/identity/credit card field generation
-- Frontend logic for MAC generation and vendor lookup
-- Base UI styles (CSS) supporting the above engines
-- General routing tools for multi-language static sites (e.g., `language-switcher.js`)
-
-**The following are not included:**
-
-- Production site HTML page templates and all copy
-- Large-scale address data files (`data/*.json` production datasets)
-- Internal operations scripts, deployment configurations, etc.
+**不适用：** 真实邮寄、实名开户、规避监管或任何违法用途。
 
 ---
 
-## Suitable & Unsuitable Use Cases (Important)
+## 路线图
 
-**Suitable Use Cases (Examples):**
-
-- Software development and testing environments
-- Form validation logic testing
-- Cross-border e-commerce / cross-border business address form filling simulation
-- UI/UX prototyping and demos
-- Educational demonstrations and technical sharing
-- Network testing and device simulation (MAC tools)
-
-**Unsuitable Use Cases:**
-
-- Real mailing and shipping addresses
-- Long-term real-name account registration and operation
-- Circumventing KYC / risk control / legal regulatory purposes
-- Any illegal or gray-area uses
-
----
-
-## Roadmap (Example)
-
-Planned improvements for the open-source core (actual roadmap subject to `ROADMAP.md`):
-
-- Provide clearer TypeScript type definitions
-- Split country-specific address generation logic for easier standalone extension/on-demand import
-- Enrich export formats and integration examples for easier CI/CD pipeline integration
-- Add support for more countries/regions' address formats based on community feedback
-
----
-
-## Online Examples & Contact
-
-- **Production Site (Full Product, Multi-Language)**:
-  - Chinese: <https://mockaddress.com/>
-  - English: <https://mockaddress.com/en/>
-  - Russian: <https://mockaddress.com/ru/>
-  - Spanish: <https://mockaddress.com/es/>
-  - Portuguese: <https://mockaddress.com/pt/>
-- For more background and information about this site, see the About/Help/Blog pages on the site.
-
-If you have any questions or suggestions during use, welcome to participate via Issues or PRs to help improve this frontend test data engine.
-
----
-
-## GitHub Topics
-
-**Recommended topics for this repository (copy and paste into GitHub repository settings):**
-
-### Core Functionality Tags
-```
-address-generator, random-address, fake-address, tax-free-state, real-address, 
-random-us-address, random-address-generator-for-testing, us-dummy-address-generator
-```
-
-### Regional Address Tags
-```
-hong-kong-address-random, random-address-in-hong-kong, hong-kong-random-address,
-japan-address-generator-tokyo, random-japan-address, taiwan-address-format, 
-taiwan-address-sample, canada-address, uk-address, india-address, singapore-address
-```
-
-### Technical Stack Tags
-```
-javascript, frontend, browser-only, no-backend, static-site, 
-privacy-first, openstreetmap, address-validation, postal-standards
-```
-
-### Use Case Tags
-```
-test-data, devtools, qa, testing, mock-data, form-testing, 
-automation, ci-cd, csv-export, json-export, mac-address
-```
-
-**Quick Copy (All Topics):**
-```
-address-generator, random-address, fake-address, tax-free-state, real-address, random-us-address, random-address-generator-for-testing, us-dummy-address-generator, hong-kong-address-random, random-address-in-hong-kong, hong-kong-random-address, japan-address-generator-tokyo, random-japan-address, taiwan-address-format, taiwan-address-sample, javascript, frontend, test-data, devtools, qa, testing, mock-data, browser-only, privacy-first, csv-export, json-export, mac-address
-```
+见 [ROADMAP.md](./ROADMAP.md)。
 
 ---
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT，见 [LICENSE](LICENSE)。
 
 ---
 
-## 💰 Support & Technical Services
+## 支持与联系
 
-
-### Cryptocurrency Donations
-
-You can also support us via cryptocurrency:
-
-**Ethereum / USDT (ERC-20):**
-```
-0x6Df562A8B669bf90EAe5ccB0E0440eb9DF237E4e
-```
-
-![dashangerc](ERC.png)
-
-**USDT (TRC-20):**
-```
-TYz2SP7GtL84t14CeL7tnhHLgeako3haHW
-```
-
-![dashangTRC](TRC.png)
-
-> **Note**: Cryptocurrency donations are non-refundable. Please double-check the address before sending.
-
-
-
-
-### 📊 Technical Services Support
-
-Need technical support for your project? Feel free to contact us for paid services and technical assistance.
-
-📧 Email: [jietoushiren01@gmail.com](mailto:jietoushiren01@gmail.com)
+如需技术服务或合作，请联系：[jietoushiren01@gmail.com](mailto:jietoushiren01@gmail.com)
