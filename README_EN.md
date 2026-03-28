@@ -1,4 +1,4 @@
-# MockAddress Core (Open-Source Frontend)
+# MockAddress Core 
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Frontend](https://img.shields.io/badge/Frontend-Pure%20JavaScript-blue)]()
