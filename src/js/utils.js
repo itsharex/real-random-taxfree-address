@@ -44,6 +44,28 @@ export function generatePhoneNumber(areaCode) {
   return `${areaCode}-${exchange}-${number}`;
 }
 
+/**
+ * 仅作兜底：未提供 usRegions（addr-regions-us.json）时，generateUsPhoneLikeEngine 用此小池。
+ * 与 generateUSAddress 一致时应从数据的 states[].area_codes 抽取。
+ */
+export const US_TAXFREE_STATE_AREA_CODES = {
+  AK: ['907'],
+  DE: ['302'],
+  MT: ['406'],
+  OR: ['503', '541', '458', '971'],
+};
+
+/**
+ * 生成与美国州码粗对齐的 10 位拨号格式号码（XXX-XXX-XXXX），不依赖 usData.json
+ * @param {string} stateCode 如 AK、DE、MT、OR
+ */
+export function generateUsPhoneForState(stateCode) {
+  const key = (stateCode || '').toUpperCase();
+  const pool = US_TAXFREE_STATE_AREA_CODES[key];
+  const ac = pool && pool.length ? randomElement(pool) : String(randomInt(201, 989));
+  return generatePhoneNumber(ac);
+}
+
 // Generate random email
 export function generateEmail(firstName, lastName) {
   const domains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com'];

@@ -1,7 +1,7 @@
 // Address Generator
 
 import { randomElement, randomInt, generatePhoneNumber, generateEmail, formatAddress } from './utils.js';
-import { getConfig } from './config.js';
+import { getConfig, getDataFilePath } from './config.js';
 
 function ensureNameArray(maybeList) {
   if (Array.isArray(maybeList)) return maybeList;
@@ -19,11 +19,12 @@ function ensureNameArray(maybeList) {
 // Data cache to reduce server requests
 const dataCache = new Map();
 const CACHE_PREFIX = 'address_data_cache_';
-const CACHE_VERSION = 'v1'; // Increment this to invalidate old cache
+const CACHE_VERSION = 'v2'; // 变更 dataFiles 映射或缓存策略时递增，避免错误 localStorage 残留
 const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Load data from JSON file with caching (memory + localStorage)
-async function loadData(filePath) {
+// 导出供 taxfree-preview-pack 等模块复用同一套路径解析与缓存
+export async function loadData(filePath) {
   try {
     // Check memory cache first (fastest)
     if (dataCache.has(filePath)) {
@@ -138,11 +139,16 @@ async function loadData(filePath) {
   }
 }
 
+/** 通过 config.dataFiles 的键加载 JSON，供 taxfree-preview-pack 等避免重复依赖 config 与 loadData 的循环边界 */
+export async function loadDataById(dataFileId) {
+  return loadData(getDataFilePath(dataFileId));
+}
+
 // Generate US address
 export async function generateUSAddress(selectedState = 'RANDOM') {
   try {
-    const usData = await loadData('data/usData.json');
-    const namesData = await loadData('data/namesData.json');
+    const usData = await loadData(getDataFilePath('usRegions'));
+    const namesData = await loadData(getDataFilePath('names'));
     
     // Select state
     let stateCode = selectedState;
@@ -249,8 +255,8 @@ export async function generateUSAddress(selectedState = 'RANDOM') {
 // isEnglish: true -> 生成英文姓名和英文地址；false -> 保持中文
 export async function generateHKAddress(selectedRegion = 'RANDOM', isEnglish = false) {
   try {
-    const hkData = await loadData('data/hkData.json');
-    const namesData = await loadData('data/namesData.json');
+    const hkData = await loadData(getDataFilePath('hkRegions'));
+    const namesData = await loadData(getDataFilePath('names'));
     
     // Filter districts based on selected region
     let availableDistricts = {};
@@ -402,8 +408,8 @@ export async function generateHKAddress(selectedRegion = 'RANDOM', isEnglish = f
 // Generate UK address
 export async function generateUKAddress(selectedRegion = 'RANDOM') {
   try {
-    const ukData = await loadData('data/ukData.json');
-    const namesData = await loadData('data/namesData.json');
+    const ukData = await loadData(getDataFilePath('ukRegions'));
+    const namesData = await loadData(getDataFilePath('names'));
     
     // Filter regions based on selected region
     let availableRegions = {};
@@ -511,8 +517,8 @@ export async function generateUKAddress(selectedRegion = 'RANDOM') {
 // Generate Canada address
 export async function generateCAAddress(selectedProvince = 'RANDOM') {
   try {
-    const caData = await loadData('data/caData.json');
-    const namesData = await loadData('data/namesData.json');
+    const caData = await loadData(getDataFilePath('caRegions'));
+    const namesData = await loadData(getDataFilePath('names'));
     
     // Filter provinces based on selected province
     let availableProvinces = {};
@@ -621,9 +627,9 @@ export async function generateCAAddress(selectedProvince = 'RANDOM') {
 // Generate Japan address
 export async function generateJPAddress(selectedPrefecture = 'RANDOM') {
   try {
-    const jpData = await loadData('data/jpData.json');
-    const jpNamesData = await loadData('data/jpNamesData.json');
-    const namesData = await loadData('data/namesData.json');
+    const jpData = await loadData(getDataFilePath('jpRegions'));
+    const jpNamesData = await loadData(getDataFilePath('jpNames'));
+    const namesData = await loadData(getDataFilePath('names'));
     
     // Filter prefectures based on selected prefecture
     let availablePrefectures = {};
@@ -789,8 +795,8 @@ export async function generateJPAddress(selectedPrefecture = 'RANDOM') {
 // Generate India address
 export async function generateINAddress(selectedState = 'RANDOM') {
   try {
-    const inData = await loadData('data/inData.json');
-    const namesData = await loadData('data/namesData.json');
+    const inData = await loadData(getDataFilePath('inRegions'));
+    const namesData = await loadData(getDataFilePath('names'));
     
     // Filter states based on selected state
     let availableStates = {};
@@ -908,13 +914,13 @@ export async function generateINAddress(selectedState = 'RANDOM') {
 // Generate Taiwan address
 export async function generateTWAddress(selectedCounty = 'RANDOM') {
   try {
-    const namesData = await loadData('data/namesData.json');
+    const namesData = await loadData(getDataFilePath('names'));
     
     // Try to load Taiwan data
     let twData = null;
     let selectedCountyData = null;
     try {
-      twData = await loadData('data/twData.json');
+      twData = await loadData(getDataFilePath('twRegions'));
       if (twData && twData.counties) {
         // Filter counties based on selected county
         let availableCounties = {};
@@ -1032,10 +1038,11 @@ export async function generateTWAddress(selectedCounty = 'RANDOM') {
 
 // Generate tax-free US address (only from tax-free states)
 export async function generateTaxFreeAddress(selectedState = 'DE') {
-  const taxFreeStates = ['AK', 'DE', 'MT', 'NH', 'OR'];
+  const manualTaxFreeStates = ['AK', 'DE', 'MT', 'NH', 'OR'];
+  const randomTaxFreeStates = ['AK', 'DE', 'MT', 'OR'];
   
-  if (!taxFreeStates.includes(selectedState)) {
-    selectedState = randomElement(taxFreeStates);
+  if (!manualTaxFreeStates.includes(selectedState)) {
+    selectedState = randomElement(randomTaxFreeStates);
   }
   
   return await generateUSAddress(selectedState);
@@ -1045,7 +1052,7 @@ export async function generateTaxFreeAddress(selectedState = 'DE') {
 export async function generateIdentityInfo(address) {
   try {
     // Load names data - use the same loadData function which handles paths correctly
-    const namesData = await loadData('data/namesData.json');
+    const namesData = await loadData(getDataFilePath('names'));
     if (!namesData || !namesData.nameGroups) {
       throw new Error('Names data not available');
     }
@@ -1207,7 +1214,7 @@ export async function generateIdentityInfo(address) {
       let ssnAreaNumber;
       if (address.stateCode && (address.country === '美国' || address.country === 'US')) {
         try {
-          const usData = await loadData('data/usData.json');
+          const usData = await loadData(getDataFilePath('usRegions'));
           const state = usData.states[address.stateCode];
           if (state && state.ssn_area_range && state.ssn_area_range.min && state.ssn_area_range.max) {
             // Use state-specific SSN area number range
@@ -1341,8 +1348,8 @@ export async function generateCreditCardInfo() {
 // Generate Singapore address
 export async function generateSGAddress(selectedState = 'RANDOM') {
   try {
-    const sgData = await loadData('data/sgData.json');
-    const namesData = await loadData('data/namesData.json');
+    const sgData = await loadData(getDataFilePath('sgRegions'));
+    const namesData = await loadData(getDataFilePath('names'));
     
     let availableStates = {};
     if (selectedState === 'RANDOM') {
@@ -1430,8 +1437,8 @@ export async function generateSGAddress(selectedState = 'RANDOM') {
 // Generate Germany address
 export async function generateDEAddress(selectedState = 'RANDOM') {
   try {
-    const deData = await loadData('data/deData.json');
-    const namesData = await loadData('data/namesData.json');
+    const deData = await loadData(getDataFilePath('deRegions'));
+    const namesData = await loadData(getDataFilePath('names'));
     
     // Filter states based on selected state
     let availableStates = {};

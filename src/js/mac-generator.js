@@ -1,7 +1,7 @@
 // MAC Address Generator
 
 import { randomElement } from './utils.js';
-import { getConfig } from './config.js';
+import { getConfig, getDataFilePath } from './config.js';
 
 // Data cache to reduce server requests
 const dataCache = new Map();
@@ -11,7 +11,7 @@ const CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
 // Load OUI data from JSON file with caching (memory + localStorage)
 async function loadOuiData() {
-  const filePath = 'data/macOuiData.json';
+  const filePath = getDataFilePath('macOui');
   
   try {
     // Check memory cache first
