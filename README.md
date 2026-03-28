@@ -1,4 +1,4 @@
-# MockAddress Core（开源前端核心）
+# MockAddress Core
 
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Frontend](https://img.shields.io/badge/Frontend-纯%20JavaScript-blue)]()
